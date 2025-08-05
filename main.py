@@ -7,6 +7,7 @@ from functions.get_files_info import schema_get_files_info
 from functions.get_file_content import schema_get_file_content
 from functions.run_python import schema_run_python_file
 from functions.write_file import schema_write_file
+from functions.call_function import call_function
 
 load_dotenv()
 api_key = os.environ.get("GEMINI_API_KEY")
@@ -49,7 +50,7 @@ def main():
             for function_call in response.function_calls:
                 print(f"Calling function: {function_call.name}({function_call.args})")
         else:
-            print(response.text)
+            call_function()
 
 if __name__ == "__main__":
     main()
