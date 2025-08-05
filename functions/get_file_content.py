@@ -1,5 +1,7 @@
 import os
 from config import MAX_CHARS
+from google.genai import types
+
 
 def get_file_content(working_directory, file_path):
     new_directory = os.path.join(working_directory, file_path)
@@ -21,3 +23,18 @@ def get_file_content(working_directory, file_path):
             return(f'Error: File not found or is not a regular file: "{file_path}"')
     else:
         return(f'Error: Cannot read "{file_path}" as it is outside the permitted working directory')
+    
+schema_get_file_content = types.FunctionDeclaration(
+    name="get_file_content",
+    description="Access the content of the specified file",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "file_path": types.Schema(
+                type=types.Type.STRING,
+                description="The path to the desired file",
+            ),
+        },
+        required=["file_path"]
+    ),
+)
