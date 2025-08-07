@@ -1,7 +1,7 @@
-from get_file_content import get_file_content
-from get_files_info import get_files_info
-from run_python import run_python_file
-from write_file import write_file
+from .get_file_content import get_file_content
+from .get_files_info import get_files_info
+from .run_python import run_python_file
+from .write_file import write_file
 from google.genai import types
 
 working_directory = "./calculator"
@@ -33,7 +33,7 @@ def call_function(function_call_part, verbose=False):
         )
     ],
 )
-    elif function_call_part.name == "run_python":
+    elif function_call_part.name == "run_python_file":
         return types.Content(
             role="tool",
             parts=[

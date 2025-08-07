@@ -28,6 +28,7 @@ available_functions = types.Tool(
 )
 
 def main():
+    verbose_enabled = False
     if len(sys.argv) == 1:
         print("Error: No input")
         sys.exit(1)
@@ -35,22 +36,49 @@ def main():
         user = sys.argv[1]
         messages = [types.Content(role="user", parts =[types.Part(text=user)]),
 ]
-        response = client.models.generate_content(
-            model="gemini-2.0-flash-001",
-            contents=messages,
-            config=types.GenerateContentConfig(tools=[available_functions], system_instruction=system_prompt),
-        )
-        
-        if "--verbose" in sys.argv:
-            print(f"User prompt: {user}")
-            print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
-            print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
+        try:
+            countdown = 20
+            while countdown > 0:
+                response = client.models.generate_content(
+                    model="gemini-2.0-flash-001",
+                    contents=messages,
+                    config=types.GenerateContentConfig(tools=[available_functions], system_instruction=system_prompt),
+            )
 
-        if hasattr(response, 'function_calls') and response.function_calls:
-            for function_call in response.function_calls:
-                print(f"Calling function: {function_call.name}({function_call.args})")
-        else:
-            call_function()
+        
+                if "--verbose" in sys.argv:
+                    verbose_enabled = True
+                    print(f"User prompt: {user}")
+                    print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
+                    print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
+            
+                has_function_calls = False
+
+                for candidate in response.candidates:
+                    messages.append(candidate.content)
+    
+                    if candidate.content.parts:
+                        for part in candidate.content.parts:
+                            if hasattr(part, 'function_call') and part.function_call:
+                                has_function_calls = True
+
+                                function_storage = call_function(part.function_call, verbose_enabled)
+                
+                                if verbose_enabled and function_storage.parts[0].function_response.response:
+                                    print(f"-> {function_storage.parts[0].function_response.response}")
+                
+                                messages.append(function_storage)
+                        
+                if not has_function_calls and response.text:
+                    print("Final response:")
+                    print(response.text)
+                    break
+                else:
+                    countdown -= 1
+        except Exception as e:
+            return f"Error: {e}"
+        
+        
 
 if __name__ == "__main__":
     main()
